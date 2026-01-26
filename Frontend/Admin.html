@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Eagle Courier | Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="admin.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+</head>
+<body>
+
+<header class="navbar">
+  <div class="logo">Eagle Courier Admin</div>
+</header>
+
+<section class="admin-section">
+  <h2>Create / Edit Shipment</h2>
+
+  <div class="form-box">
+    <input id="tracking" readonly placeholder="Tracking Number">
+
+    <input id="sender" placeholder="Sender Name">
+    <input id="recipient" placeholder="Receiver Name">
+    <input id="origin" placeholder="Origin">
+    <input id="destination" placeholder="Destination">
+    <input id="weight" placeholder="Weight (kg)">
+
+    <select id="status">
+      <option>Shipment Created</option>
+      <option>Picked Up</option>
+      <option>In Transit</option>
+      <option>Out for Delivery</option>
+      <option>awaiting payment</option>
+      <option>On hold</option>
+      <option>Delivered</option>
+    </select>
+
+    <h3>Set Route</h3>
+    <div id="adminMap" style="height:300px; flex-basis:100%; margin-bottom:10px;"></div>
+    <p style="color:gray; font-size:0.9em;">
+      Click on the map to add points (Origin → Transit → Destination). Drag markers to adjust.
+    </p>
+
+    <button onclick="saveShipment()">Save Shipment</button>
+  </div>
+
+  <h2>All Shipments</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Tracking</th>
+        <th>Receiver</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="shipmentTable"></tbody>
+  </table>
+</section>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="adminscript.js"></script>
+</body>
+</html>
