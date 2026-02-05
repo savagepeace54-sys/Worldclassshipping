@@ -10,10 +10,12 @@ const PORT = process.env.PORT || 3000;
 // --------------------
 app.use(express.json());
 
-// Serve static frontend files (make sure folder is frontend/)
+// --------------------
+// Serve static frontend files (lowercase frontend folder)
+// --------------------
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// Default route → index.html (lowercase!)
+// Default route → lowercase index.html
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
