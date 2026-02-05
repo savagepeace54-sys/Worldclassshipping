@@ -2,19 +2,21 @@
 const params = new URLSearchParams(window.location.search);
 const tn = params.get("tn")?.toUpperCase(); // convert to uppercase
 
+console.log("Tracking number from URL:", tn);
+
 if (!tn) {
   document.body.innerHTML = "<h2>No tracking number provided</h2>";
   throw new Error("No tracking number");
 }
 
-// Fetch shipment from backend
-fetch(`http://localhost:3000/api/shipments/${tn}`)
+// Fetch shipment from backend (relative URL)
+fetch(`/api/shipments/${tn}`)
   .then(res => {
     if (!res.ok) throw new Error("Shipment not found");
     return res.json();
   })
   .then(shipment => {
-    console.log("Fetched shipment:", shipment); // log for debugging
+    console.log("Fetched shipment:", shipment);
 
     const tnElem = document.getElementById("tn");
     const senderElem = document.getElementById("sender");
@@ -26,15 +28,10 @@ fetch(`http://localhost:3000/api/shipments/${tn}`)
     const progressElem = document.getElementById("progress");
     const historyElem = document.getElementById("history");
 
-    if (!shipment) {
-      document.body.innerHTML = "<h2>Shipment not found</h2>";
-      return;
-    }
-
-    // Use backend field names
+    // Display shipment info
     tnElem.textContent = shipment.trackingNumber || "N/A";
     senderElem.textContent = shipment.sender || "N/A";
-    receiverElem.textContent = shipment.recipient || "N/A"; // backend is recipient
+    receiverElem.textContent = shipment.recipient || "N/A";
     originElem.textContent = shipment.origin || "N/A";
     destinationElem.textContent = shipment.destination || "N/A";
     weightElem.textContent = shipment.weight || "N/A";
@@ -65,7 +62,7 @@ fetch(`http://localhost:3000/api/shipments/${tn}`)
     }
 
     // Map
-    const map = L.map("map").setView([6.5244, 3.3792], 4); // default view
+    const map = L.map("map").setView([6.5244, 3.3792], 4);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
     const coords = shipment.route?.map(r => [r.lat, r.lng]) || [];
