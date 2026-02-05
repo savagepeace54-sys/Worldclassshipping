@@ -11,7 +11,7 @@ async function trackShipment() {
   }
 
   try {
-    const res = await fetch(`http://localhost:3000/api/shipments/${trackingNumber}`);
+    const res = await fetch(`/api/shipments/${trackingNumber}`); // <-- relative URL
 
     if (!res.ok) {
       resultBox.innerHTML = "<p style='color:red'>Tracking number not found.</p>";
