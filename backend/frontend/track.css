@@ -1,0 +1,91 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+}
+
+.navbar {
+  background: #0a2a66;
+  color: white;
+  padding: 15px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar a {
+  color: white;
+  margin-left: 20px;
+  text-decoration: none;
+}
+
+.navbar a.active {
+  text-decoration: underline;
+}
+
+.tracking-container {
+  max-width: 1100px;
+  margin: 30px auto;
+  padding: 20px;
+}
+
+.card {
+  background: white;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.progress {
+  list-style: none;
+  padding: 0;
+}
+
+.progress li {
+  padding: 10px;
+  border-left: 4px solid #ccc;
+  margin-bottom: 8px;
+}
+
+.progress li.done {
+  border-color: green;
+  color: green;
+}
+
+.progress li.active {
+  border-color: orange;
+  font-weight: bold;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table th, table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+}
+
+table th {
+  background: #f0f0f0;
+}
+
+#map {
+  height: 350px;
+  border-radius: 5px;
+}
+
+footer {
+  background: #0a2a66;
+  color: white;
+  text-align: center;
+  padding: 15px;
+}

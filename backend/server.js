@@ -11,13 +11,14 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 // --------------------
-// Serve static frontend files (lowercase frontend folder)
+// Serve static frontend files
 // --------------------
-app.use(express.static(path.join(__dirname, '../frontend')));
+// UPDATED: frontend folder should be inside backend
+app.use(express.static(path.join(__dirname, 'frontend')));
 
 // Default route → lowercase index.html
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/index.html'));
+  res.sendFile(path.join(__dirname, 'frontend/index.html'));
 });
 
 // --------------------
