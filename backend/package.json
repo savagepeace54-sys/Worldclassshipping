@@ -1,14 +1,11 @@
 {
   "name": "worldclassshipping",
   "version": "1.0.0",
-  "description": "Worldclassshipping frontend + backend",
-  "main": "backend/server.js",
+  "description": "Worldclassshipping backend",
+  "main": "server.js",
   "scripts": {
-    "start": "node backend/server.js"
+    "start": "node server.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
