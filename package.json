@@ -2,21 +2,10 @@
   "name": "worldclassshipping",
   "version": "1.0.0",
   "description": "Worldclassshipping frontend + backend",
-  "main": "backend/server.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node backend/server.js"
+    "start": "node server.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/savagepeace54-sys/Worldclassshipping.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/savagepeace54-sys/Worldclassshipping/issues"
-  },
-  "homepage": "https://github.com/savagepeace54-sys/Worldclassshipping#readme",
   "dependencies": {
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
