@@ -2,9 +2,9 @@
   "name": "worldclassshipping",
   "version": "1.0.0",
   "description": "Worldclassshipping frontend + backend",
-  "main": "server.js",
+  "main": "backend/server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node backend/server.js"
   },
   "repository": {
     "type": "git",

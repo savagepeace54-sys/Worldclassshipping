@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
 
-  const API = "http://localhost:3000/api/shipments";
+  // ✅ Use relative path for Render/live deployment
+  const API = "/api/shipments";
 
   // --- Form inputs ---
   const trackingInput = document.getElementById("tracking");
