@@ -10,12 +10,12 @@ const PORT = process.env.PORT || 3000;
 // --------------------
 app.use(express.json());
 
-// Serve static frontend files
+// Serve static frontend files (make sure folder is frontend/)
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// Default route → Index.html
+// Default route → index.html (lowercase!)
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/Index.html'));
+  res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
 // --------------------
@@ -33,7 +33,7 @@ mongoose.connect(MONGODB_URI)
 const shipmentSchema = new mongoose.Schema({
   trackingNumber: { type: String, required: true, uppercase: true },
   sender: String,
-  recipient: String,       // match admin.js field
+  recipient: String,
   origin: String,
   destination: String,
   weight: String,
