@@ -13,7 +13,6 @@ app.use(express.json());
 // --------------------
 // Serve static frontend files
 // --------------------
-// UPDATED: frontend folder should be inside backend
 app.use(express.static(path.join(__dirname, 'frontend')));
 
 // Default route → lowercase index.html
@@ -41,6 +40,7 @@ const shipmentSchema = new mongoose.Schema({
   destination: String,
   weight: String,
   status: String,
+  lastUpdate: String, // <-- added field
   progress: [String],
   history: [
     {
@@ -75,11 +75,13 @@ app.get('/api/shipments', async (req, res) => {
   }
 });
 
-// GET shipment by tracking number
+// GET shipment by tracking number (case-insensitive)
 app.get('/api/shipments/:trackingNumber', async (req, res) => {
-  const trackingNumber = req.params.trackingNumber.toUpperCase();
+  const tn = req.params.trackingNumber;
   try {
-    const shipment = await Shipment.findOne({ trackingNumber });
+    const shipment = await Shipment.findOne({
+      trackingNumber: { $regex: `^${tn}$`, $options: "i" } // case-insensitive match
+    });
     if (!shipment) return res.status(404).json({ error: 'Tracking number not found' });
     res.json(shipment);
   } catch (err) {
@@ -100,10 +102,10 @@ app.post('/api/shipments', async (req, res) => {
 
 // PUT (update) shipment
 app.put('/api/shipments/:trackingNumber', async (req, res) => {
-  const trackingNumber = req.params.trackingNumber.toUpperCase();
+  const tn = req.params.trackingNumber;
   try {
     const shipment = await Shipment.findOneAndUpdate(
-      { trackingNumber },
+      { trackingNumber: { $regex: `^${tn}$`, $options: "i" } }, // case-insensitive
       req.body,
       { new: true, runValidators: true }
     );
@@ -116,9 +118,11 @@ app.put('/api/shipments/:trackingNumber', async (req, res) => {
 
 // DELETE shipment
 app.delete('/api/shipments/:trackingNumber', async (req, res) => {
-  const trackingNumber = req.params.trackingNumber.toUpperCase();
+  const tn = req.params.trackingNumber;
   try {
-    const shipment = await Shipment.findOneAndDelete({ trackingNumber });
+    const shipment = await Shipment.findOneAndDelete({
+      trackingNumber: { $regex: `^${tn}$`, $options: "i" } // case-insensitive
+    });
     if (!shipment) return res.status(404).json({ error: 'Tracking number not found' });
     res.json({ message: 'Shipment deleted' });
   } catch (err) {
