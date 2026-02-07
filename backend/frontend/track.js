@@ -25,6 +25,7 @@ fetch(`/api/shipments/${tn}`)
     const destinationElem = document.getElementById("destination");
     const weightElem = document.getElementById("weight");
     const statusElem = document.getElementById("status");
+    const lastUpdateElem = document.getElementById("lastUpdate"); // <-- NEW
     const progressElem = document.getElementById("progress");
     const historyElem = document.getElementById("history");
 
@@ -36,6 +37,7 @@ fetch(`/api/shipments/${tn}`)
     destinationElem.textContent = shipment.destination || "N/A";
     weightElem.textContent = shipment.weight || "N/A";
     statusElem.textContent = shipment.status || "N/A";
+    lastUpdateElem.textContent = shipment.lastUpdate || "N/A"; // <-- NEW
 
     // Progress
     progressElem.innerHTML = "";

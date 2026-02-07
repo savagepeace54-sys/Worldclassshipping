@@ -1,16 +1,17 @@
 document.addEventListener("DOMContentLoaded", function () {
 
-  // ✅ Use relative path for Render/live deployment
+  // API endpoint (relative path for Render)
   const API = "/api/shipments";
 
   // --- Form inputs ---
   const trackingInput = document.getElementById("tracking");
   const sender = document.getElementById("sender");
-  const recipient = document.getElementById("recipient"); // matches HTML
+  const recipient = document.getElementById("recipient");
   const origin = document.getElementById("origin");
   const destination = document.getElementById("destination");
   const weight = document.getElementById("weight");
   const status = document.getElementById("status");
+  const lastUpdate = document.getElementById("lastUpdate");
   const shipmentTable = document.getElementById("shipmentTable");
 
   // --- Generate tracking number ---
@@ -69,17 +70,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const shipment = {
       trackingNumber: trackingInput.value,
       sender: sender.value,
-      recipient: recipient.value, // backend field
+      recipient: recipient.value,
       origin: origin.value,
       destination: destination.value,
       weight: weight.value,
       status: status.value,
-      progress: [status.value],
-      history: [{
-        date: new Date().toLocaleString(),
-        location: origin.value,
-        status: status.value
-      }],
+      lastUpdate: lastUpdate.value || new Date().toLocaleString(),
       route: routePoints.map(p => ({ lat: p.lat, lng: p.lng, label: p.label }))
     };
 
@@ -121,12 +117,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
     trackingInput.value = s.trackingNumber;
     sender.value = s.sender;
-    recipient.value = s.recipient; // matches backend
+    recipient.value = s.recipient;
     origin.value = s.origin;
     destination.value = s.destination;
     weight.value = s.weight;
-    status.value = s.status;
+    status.value = s.status || "";
+    lastUpdate.value = s.lastUpdate || "";
 
+    // Reset map markers
     routePoints = [];
     adminMap.eachLayer(l => l instanceof L.Marker && adminMap.removeLayer(l));
 
@@ -147,8 +145,9 @@ document.addEventListener("DOMContentLoaded", function () {
       shipmentTable.innerHTML += `
         <tr>
           <td>${s.trackingNumber}</td>
-          <td>${s.recipient || "N/A"}</td> 
-          <td>${s.status}</td>
+          <td>${s.recipient || "N/A"}</td>
+          <td>${s.status || ""}</td>
+          <td>${s.lastUpdate || ""}</td>
           <td>
             <button onclick="editShipment('${s.trackingNumber}')">Edit</button>
             <button onclick="removeShipment('${s.trackingNumber}')">Delete</button>
@@ -159,8 +158,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // ================= RESET =================
   function resetForm() {
-    trackingInput.value = generateTrackingNumber(); // new tracking number
-    ["sender","recipient","origin","destination","weight"].forEach(id => document.getElementById(id).value = "");
+    trackingInput.value = generateTrackingNumber();
+    ["sender","recipient","origin","destination","weight","status","lastUpdate"].forEach(id => document.getElementById(id).value = "");
     routePoints = [];
     adminMap.eachLayer(l => l instanceof L.Marker && adminMap.removeLayer(l));
   }
