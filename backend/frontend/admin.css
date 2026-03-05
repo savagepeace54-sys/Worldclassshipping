@@ -13,15 +13,26 @@ body {
   padding: 15px 30px;
 }
 
+.navbar nav {
+  display: flex;
+  gap: 10px;
+}
+
 .navbar a {
   color: white;
   text-decoration: none;
-  margin-left: 15px;
+  padding: 8px 16px;
+  border-radius: 4px;
+  transition: background 0.3s;
+}
+
+.navbar a:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .navbar a.active {
+  background: rgba(255, 255, 255, 0.2);
   font-weight: bold;
-  text-decoration: underline;
 }
 
 .admin-section {
