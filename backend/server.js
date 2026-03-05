@@ -164,10 +164,13 @@ app.delete('/api/shipments/:trackingNumber', async (req, res) => {
 // GET all conversations
 app.get('/api/chat/conversations', async (req, res) => {
   try {
+    console.log('Fetching all conversations...'); // Debug log
     const conversations = await Conversation.find({ status: 'active' })
       .sort({ updatedAt: -1 });
+    console.log(`Found ${conversations.length} conversations:`, conversations.map(c => ({ id: c._id, tn: c.trackingNumber, status: c.status }))); // Debug log
     res.json(conversations);
   } catch (err) {
+    console.error('Error fetching conversations:', err); // Debug log
     res.status(500).json({ error: err.message });
   }
 });
@@ -175,6 +178,7 @@ app.get('/api/chat/conversations', async (req, res) => {
 // GET or create conversation by tracking number
 app.get('/api/chat/conversations/:trackingNumber', async (req, res) => {
   const tn = req.params.trackingNumber.toUpperCase();
+  console.log(`Getting/creating conversation for tracking number: ${tn}`); // Debug log
   try {
     let conversation = await Conversation.findOne({ 
       trackingNumber: tn,
@@ -182,12 +186,17 @@ app.get('/api/chat/conversations/:trackingNumber', async (req, res) => {
     });
     
     if (!conversation) {
+      console.log(`Creating new conversation for ${tn}`); // Debug log
       conversation = new Conversation({ trackingNumber: tn });
       await conversation.save();
+      console.log(`Conversation created: ${conversation._id}`); // Debug log
+    } else {
+      console.log(`Found existing conversation: ${conversation._id}`); // Debug log
     }
     
     res.json(conversation);
   } catch (err) {
+    console.error('Error getting/creating conversation:', err); // Debug log
     res.status(500).json({ error: err.message });
   }
 });
@@ -195,12 +204,14 @@ app.get('/api/chat/conversations/:trackingNumber', async (req, res) => {
 // GET messages for a conversation
 app.get('/api/chat/conversations/:conversationId/messages', async (req, res) => {
   try {
+    console.log(`Fetching messages for conversation: ${req.params.conversationId}`); // Debug log
     const messages = await Message.find({ 
       conversationId: req.params.conversationId 
     }).sort({ createdAt: 1 });
-    
+    console.log(`Found ${messages.length} messages`); // Debug log
     res.json(messages);
   } catch (err) {
+    console.error('Error fetching messages:', err); // Debug log
     res.status(500).json({ error: err.message });
   }
 });
@@ -211,6 +222,8 @@ app.post('/api/chat/conversations/:conversationId/messages', async (req, res) =>
     const { content, sender } = req.body;
     const conversationId = req.params.conversationId;
     
+    console.log(`Received message from ${sender} in conversation ${conversationId}:`, content); // Debug log
+    
     // Create message
     const message = new Message({
       conversationId,
@@ -218,6 +231,7 @@ app.post('/api/chat/conversations/:conversationId/messages', async (req, res) =>
       content
     });
     await message.save();
+    console.log('Message saved:', message._id); // Debug log
     
     // Update conversation
     const updateData = {
@@ -235,9 +249,11 @@ app.post('/api/chat/conversations/:conversationId/messages', async (req, res) =>
     }
     
     await Conversation.findByIdAndUpdate(conversationId, updateData);
+    console.log('Conversation updated'); // Debug log
     
     res.json(message);
   } catch (err) {
+    console.error('Error saving message:', err); // Debug log
     res.status(500).json({ error: err.message });
   }
 });
