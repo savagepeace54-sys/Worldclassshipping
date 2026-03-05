@@ -62,7 +62,34 @@ const shipmentSchema = new mongoose.Schema({
 const Shipment = mongoose.model('Shipment', shipmentSchema);
 
 // --------------------
-// API Routes
+// Chat Schema
+// --------------------
+const messageSchema = new mongoose.Schema({
+  conversationId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'Conversation' },
+  sender: { type: String, required: true, enum: ['user', 'admin'] },
+  content: { type: String, required: true },
+  read: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const conversationSchema = new mongoose.Schema({
+  trackingNumber: { type: String, required: true },
+  status: { type: String, enum: ['active', 'closed'], default: 'active' },
+  unreadCount: { type: Number, default: 0 },
+  lastMessage: {
+    content: String,
+    sender: String,
+    createdAt: Date
+  },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+});
+
+const Message = mongoose.model('Message', messageSchema);
+const Conversation = mongoose.model('Conversation', conversationSchema);
+
+// --------------------
+// API Routes - Shipments
 // --------------------
 
 // GET all shipments
@@ -125,6 +152,139 @@ app.delete('/api/shipments/:trackingNumber', async (req, res) => {
     });
     if (!shipment) return res.status(404).json({ error: 'Tracking number not found' });
     res.json({ message: 'Shipment deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --------------------
+// API Routes - Chat
+// --------------------
+
+// GET all conversations
+app.get('/api/chat/conversations', async (req, res) => {
+  try {
+    const conversations = await Conversation.find({ status: 'active' })
+      .sort({ updatedAt: -1 });
+    res.json(conversations);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET or create conversation by tracking number
+app.get('/api/chat/conversations/:trackingNumber', async (req, res) => {
+  const tn = req.params.trackingNumber.toUpperCase();
+  try {
+    let conversation = await Conversation.findOne({ 
+      trackingNumber: tn,
+      status: 'active'
+    });
+    
+    if (!conversation) {
+      conversation = new Conversation({ trackingNumber: tn });
+      await conversation.save();
+    }
+    
+    res.json(conversation);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET messages for a conversation
+app.get('/api/chat/conversations/:conversationId/messages', async (req, res) => {
+  try {
+    const messages = await Message.find({ 
+      conversationId: req.params.conversationId 
+    }).sort({ createdAt: 1 });
+    
+    res.json(messages);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST a new message
+app.post('/api/chat/conversations/:conversationId/messages', async (req, res) => {
+  try {
+    const { content, sender } = req.body;
+    const conversationId = req.params.conversationId;
+    
+    // Create message
+    const message = new Message({
+      conversationId,
+      sender,
+      content
+    });
+    await message.save();
+    
+    // Update conversation
+    const updateData = {
+      lastMessage: {
+        content,
+        sender,
+        createdAt: new Date()
+      },
+      updatedAt: new Date()
+    };
+    
+    // Increment unread count if message is from user
+    if (sender === 'user') {
+      updateData.$inc = { unreadCount: 1 };
+    }
+    
+    await Conversation.findByIdAndUpdate(conversationId, updateData);
+    
+    res.json(message);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Mark conversation as read
+app.put('/api/chat/conversations/:conversationId/read', async (req, res) => {
+  try {
+    await Conversation.findByIdAndUpdate(
+      req.params.conversationId,
+      { unreadCount: 0 }
+    );
+    
+    // Mark all messages as read
+    await Message.updateMany(
+      { 
+        conversationId: req.params.conversationId,
+        sender: 'user',
+        read: false
+      },
+      { read: true }
+    );
+    
+    res.json({ message: 'Marked as read' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Close conversation
+app.put('/api/chat/conversations/:conversationId/close', async (req, res) => {
+  try {
+    await Conversation.findByIdAndUpdate(
+      req.params.conversationId,
+      { status: 'closed' }
+    );
+    res.json({ message: 'Conversation closed' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete conversation
+app.delete('/api/chat/conversations/:conversationId', async (req, res) => {
+  try {
+    await Conversation.findByIdAndDelete(req.params.conversationId);
+    await Message.deleteMany({ conversationId: req.params.conversationId });
+    res.json({ message: 'Conversation deleted' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
