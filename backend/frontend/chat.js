@@ -1,6 +1,7 @@
 // ===== ADMIN CHAT SYSTEM =====
 
 const API_BASE = '/api/chat';
+
 let currentChatId = null;
 let currentTrackingNumber = null;
 let chats = [];
@@ -9,7 +10,6 @@ let refreshInterval = null;
 // DOM Elements
 const chatList = document.getElementById('chatList');
 const chatMessages = document.getElementById('chatMessages');
-const chatHeader = document.getElementById('chatHeader');
 const chatTitle = document.getElementById('chatTitle');
 const chatSubtitle = document.getElementById('chatSubtitle');
 const chatInputArea = document.getElementById('chatInputArea');
@@ -21,360 +21,394 @@ const deleteChatBtn = document.getElementById('deleteChatBtn');
 const totalUnreadBadge = document.getElementById('totalUnread');
 const toast = document.getElementById('toast');
 
-// Initialize
- document.addEventListener('DOMContentLoaded', () => {
-  loadChats();
-  startAutoRefresh();
-  setupEventListeners();
+// INIT
+document.addEventListener('DOMContentLoaded', () => {
+loadChats();
+setupEventListeners();
+startAutoRefresh();
 });
 
-// Event Listeners
+// EVENT LISTENERS
 function setupEventListeners() {
-  sendBtn.addEventListener('click', sendMessage);
-  
-  messageInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  });
 
-  messageInput.addEventListener('input', autoResize);
+if (sendBtn) sendBtn.addEventListener('click', sendMessage);
 
-  searchInput.addEventListener('input', (e) => {
-    filterChats(e.target.value);
-  });
+if (messageInput) {
+messageInput.addEventListener('keydown', (e) => {
+if (e.key === 'Enter' && !e.shiftKey) {
+e.preventDefault();
+sendMessage();
+}
+});
 
-  closeChatBtn.addEventListener('click', closeCurrentChat);
-  deleteChatBtn.addEventListener('click', deleteCurrentChat);
+messageInput.addEventListener('input', autoResize);
+
 }
 
-// Load all chats
+if (searchInput) {
+searchInput.addEventListener('input', (e) => {
+filterChats(e.target.value);
+});
+}
+
+if (closeChatBtn) closeChatBtn.addEventListener('click', closeCurrentChat);
+if (deleteChatBtn) deleteChatBtn.addEventListener('click', deleteCurrentChat);
+}
+
+// LOAD CHATS
 async function loadChats() {
-  try {
-    const res = await fetch(`${API_BASE}/conversations`);
-    if (!res.ok) throw new Error('Failed to load chats');
-    
-    chats = await res.json();
-    console.log('Loaded conversations:', chats); // Debug log
-    renderChatList();
-    updateTotalUnread();
-  } catch (err) {
-    console.error('Error loading chats:', err);
-    showToast('Failed to load chats', 'error');
-  }
+try {
+
+const res = await fetch(`${API_BASE}/conversations`);
+chats = await res.json();
+
+renderChatList();
+updateTotalUnread();
+
+} catch (err) {
+
+console.error(err);
+showToast('Failed to load chats', 'error');
+
+}
 }
 
-// Render chat list
+// RENDER CHAT LIST
 function renderChatList() {
-  if (!chats || chats.length === 0) {
-    chatList.innerHTML = `
-      <div class="empty-state">
-        <p>No active chats</p>
-      </div>
-    `;
-    return;
-  }
 
-  chatList.innerHTML = chats.map(chat => {
-    const lastMessage = chat.lastMessage || null;
-    const unreadCount = chat.unreadCount || 0;
-    const isActive = chat._id === currentChatId;
-    const initials = chat.trackingNumber ? chat.trackingNumber.substring(0, 2) : '??';
-    const time = lastMessage && lastMessage.createdAt ? formatTime(lastMessage.createdAt) : '';
-    const preview = lastMessage && lastMessage.content ? lastMessage.content : 'No messages yet';
-    
-    return `
-      <div class="chat-item ${isActive ? 'active' : ''} ${unreadCount > 0 ? 'unread' : ''}" 
-           data-id="${chat._id}" 
-           onclick="selectChat('${chat._id}')">
-        <div class="chat-avatar">${initials}</div>
-        <div class="chat-info">
-          <div class="chat-name">${chat.trackingNumber || 'Unknown'}</div>
-          <div class="chat-preview">${preview}</div>
-        </div>
-        <div class="chat-meta">
-          <div class="chat-time">${time}</div>
-          ${unreadCount > 0 ? `<span class="chat-unread">${unreadCount}</span>` : ''}
-        </div>
-      </div>
-    `;
-  }).join('');
+if (!chats.length) {
+chatList.innerHTML = "<div class="empty-state"><p>No active chats</p></div>";
+return;
 }
 
-// Select a chat - make it global for onclick handlers
-window.selectChat = async function(chatId) {
-  currentChatId = chatId;
-  const chat = chats.find(c => c._id === chatId);
-  
-  if (chat) {
-    currentTrackingNumber = chat.trackingNumber;
-    chatTitle.textContent = `Tracking: ${chat.trackingNumber}`;
-    chatSubtitle.textContent = `Started: ${formatDate(chat.createdAt)}`;
-    chatInputArea.style.display = 'block';
-    
-    // Update active state in list
-    document.querySelectorAll('.chat-item').forEach(item => {
-      item.classList.remove('active');
-    });
-    document.querySelector(`[data-id="${chatId}"]`)?.classList.add('active');
-    
-    await loadMessages(chatId);
-    await markAsRead(chatId);
-  }
+chatList.innerHTML = chats.map(chat => {
+
+const lastMessage = chat.lastMessage || {};
+const unreadCount = chat.unreadCount || 0;
+
+const preview = lastMessage.content || "No messages yet";
+const time = lastMessage.createdAt ? formatTime(lastMessage.createdAt) : "";
+
+return `
+
+<div class="chat-item ${chat._id === currentChatId ? 'active' : ''}"
+onclick="selectChat('${chat._id}')">
+
+  <div class="chat-avatar">
+  ${chat.trackingNumber ? chat.trackingNumber.slice(0,2) : "??"}
+  </div>
+
+  <div class="chat-info">
+
+    <div class="chat-name">${chat.trackingNumber}</div>
+    <div class="chat-preview">${preview}</div>
+
+  </div>
+
+  <div class="chat-meta">
+
+    <div class="chat-time">${time}</div>
+
+    ${unreadCount ? `<span class="chat-unread">${unreadCount}</span>` : ''}
+
+  </div>
+
+</div>
+
+`;
+
+}).join("");
+
 }
 
-// Load messages for a chat
-async function loadMessages(chatId) {
-  try {
-    const res = await fetch(`${API_BASE}/conversations/${chatId}/messages`);
-    if (!res.ok) throw new Error('Failed to load messages');
-    
-    const messages = await res.json();
-    renderMessages(messages);
-  } catch (err) {
-    console.error('Error loading messages:', err);
-    showToast('Failed to load messages', 'error');
-  }
+// SELECT CHAT
+window.selectChat = async function(chatId){
+
+currentChatId = chatId;
+
+const chat = chats.find(c => c._id === chatId);
+
+if(!chat) return;
+
+currentTrackingNumber = chat.trackingNumber;
+
+chatTitle.textContent = "Tracking: ${chat.trackingNumber}";
+chatSubtitle.textContent = "Started: ${formatDate(chat.createdAt)}";
+
+chatInputArea.style.display = "block";
+
+await loadMessages(chatId);
+await markAsRead(chatId);
+
 }
 
-// Render messages
-function renderMessages(messages) {
-  if (messages.length === 0) {
-    chatMessages.innerHTML = `
-      <div class="empty-chat">
-        <div class="empty-icon">💬</div>
-        <p>No messages yet. Start the conversation!</p>
-      </div>
-    `;
-    return;
-  }
+// LOAD MESSAGES
+async function loadMessages(chatId){
 
-  chatMessages.innerHTML = messages.map(msg => {
-    const isAdmin = msg.sender === 'admin';
-    const time = formatTime(msg.createdAt);
-    const sender = isAdmin ? 'You (Admin)' : 'Customer';
-    
-    return `
-      <div class="message ${isAdmin ? 'sent' : 'received'}">
-        <div class="message-header">${sender}</div>
-        <div class="message-content">${escapeHtml(msg.content)}</div>
-        <div class="message-time">${time}</div>
-      </div>
-    `;
-  }).join('');
+try{
 
-  scrollToBottom();
+const res = await fetch(`${API_BASE}/conversations/${chatId}/messages`);
+
+const messages = await res.json();
+
+renderMessages(messages);
+
+}catch(err){
+
+console.error(err);
+showToast("Failed to load messages","error");
+
 }
 
-// Send message
-async function sendMessage() {
-  const content = messageInput.value.trim();
-  if (!content || !currentChatId) return;
-
-  try {
-    const res = await fetch(`${API_BASE}/conversations/${currentChatId}/messages`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        content,
-        sender: 'admin'
-      })
-    });
-
-    if (!res.ok) throw new Error('Failed to send message');
-
-    messageInput.value = '';
-    messageInput.style.height = 'auto';
-    
-    // Reload messages
-    await loadMessages(currentChatId);
-    await loadChats(); // Refresh chat list
-  } catch (err) {
-    console.error('Error sending message:', err);
-    showToast('Failed to send message', 'error');
-  }
 }
 
-// Mark chat as read
-async function markAsRead(chatId) {
-  try {
-    await fetch(`${API_BASE}/conversations/${chatId}/read`, {
-      method: 'PUT'
-    });
-    
-    // Update local state
-    const chat = chats.find(c => c._id === chatId);
-    if (chat) {
-      chat.unreadCount = 0;
-      renderChatList();
-      updateTotalUnread();
-    }
-  } catch (err) {
-    console.error('Error marking as read:', err);
-  }
+// RENDER MESSAGES
+function renderMessages(messages){
+
+if(!messages.length){
+
+chatMessages.innerHTML =
+`<div class="empty-chat">
+<div class="empty-icon">💬</div>
+<p>No messages yet</p>
+</div>`;
+
+return;
+
 }
 
-// Close current chat
-async function closeCurrentChat() {
-  if (!currentChatId) return;
+chatMessages.innerHTML = messages.map(msg=>{
 
-  if (!confirm('Are you sure you want to close this chat?')) return;
+const isAdmin = msg.sender === "admin";
 
-  try {
-    const res = await fetch(`${API_BASE}/conversations/${currentChatId}/close`, {
-      method: 'PUT'
-    });
+return`
 
-    if (!res.ok) throw new Error('Failed to close chat');
+<div class="message ${isAdmin ? "sent":"received"}">
 
-    showToast('Chat closed successfully', 'success');
-    resetChatView();
-    await loadChats();
-  } catch (err) {
-    console.error('Error closing chat:', err);
-    showToast('Failed to close chat', 'error');
-  }
+<div class="message-header">
+${isAdmin ? "You (Admin)":"Customer"}
+</div>
+
+<div class="message-content">
+${escapeHtml(msg.content)}
+</div>
+
+<div class="message-time">
+${formatTime(msg.createdAt)}
+</div>
+
+</div>
+
+`
+
+}).join("");
+
+scrollToBottom();
+
 }
 
-// Delete current chat
-async function deleteCurrentChat() {
-  if (!currentChatId) return;
+// SEND MESSAGE
+async function sendMessage(){
 
-  if (!confirm('Are you sure you want to delete this chat? This cannot be undone.')) return;
+const content = messageInput.value.trim();
 
-  try {
-    const res = await fetch(`${API_BASE}/conversations/${currentChatId}`, {
-      method: 'DELETE'
-    });
+if(!content || !currentChatId) return;
 
-    if (!res.ok) throw new Error('Failed to delete chat');
+try{
 
-    showToast('Chat deleted successfully', 'success');
-    resetChatView();
-    await loadChats();
-  } catch (err) {
-    console.error('Error deleting chat:', err);
-    showToast('Failed to delete chat', 'error');
-  }
-}
+await fetch(`${API_BASE}/conversations/${currentChatId}/messages`,{
 
-// Reset chat view
-function resetChatView() {
-  currentChatId = null;
-  currentTrackingNumber = null;
-  chatTitle.textContent = 'Select a chat';
-  chatSubtitle.textContent = 'Click on a conversation to start';
-  chatInputArea.style.display = 'none';
-  chatMessages.innerHTML = `
-    <div class="empty-chat">
-      <div class="empty-icon">💬</div>
-      <p>Select a conversation from the sidebar</p>
-    </div>
-  `;
-}
+  method:"POST",
+  headers:{ "Content-Type":"application/json" },
 
-// Filter chats
-function filterChats(query) {
-  const items = document.querySelectorAll('.chat-item');
-  items.forEach(item => {
-    const name = item.querySelector('.chat-name').textContent.toLowerCase();
-    if (name.includes(query.toLowerCase())) {
-      item.style.display = 'flex';
-    } else {
-      item.style.display = 'none';
-    }
-  });
-}
+  body:JSON.stringify({
+    content,
+    sender:"admin"
+  })
 
-// Update total unread count
-function updateTotalUnread() {
-  const total = chats.reduce((sum, chat) => sum + (chat.unreadCount || 0), 0);
-  totalUnreadBadge.textContent = total;
-  totalUnreadBadge.style.display = total > 0 ? 'inline-block' : 'none';
-}
-
-// Auto-resize textarea
-function autoResize() {
-  this.style.height = 'auto';
-  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
-}
-
-// Scroll to bottom of messages
-function scrollToBottom() {
-  chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-// Format time
-function formatTime(dateString) {
-  const date = new Date(dateString);
-  const now = new Date();
-  const isToday = date.toDateString() === now.toDateString();
-  
-  if (isToday) {
-    return date.toLocaleTimeString('en-US', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      hour12: true 
-    });
-  }
-  
-  return date.toLocaleDateString('en-US', { 
-    month: 'short', 
-    day: 'numeric' 
-  });
-}
-
-// Format date
-function formatDate(dateString) {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { 
-    year: 'numeric',
-    month: 'long', 
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-}
-
-// Escape HTML
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-// Show toast notification
-function showToast(message, type = 'info') {
-  toast.textContent = message;
-  toast.className = `toast ${type} show`;
-  
-  setTimeout(() => {
-    toast.classList.remove('show');
-  }, 3000);
-}
-
-// Auto-refresh chats
-function startAutoRefresh() {
-  refreshInterval = setInterval(() => {
-    if (currentChatId) {
-      loadMessages(currentChatId);
-    }
-    loadChats();
-  }, 5000); // Refresh every 5 seconds
-}
-
-// Stop auto-refresh when page is hidden
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden) {
-    clearInterval(refreshInterval);
-  } else {
-    startAutoRefresh();
-    loadChats();
-  }
 });
 
-// Cleanup on page unload
-window.addEventListener('beforeunload', () => {
-  clearInterval(refreshInterval);
+messageInput.value="";
+messageInput.style.height="auto";
+
+await loadMessages(currentChatId);
+await loadChats();
+
+}catch(err){
+
+console.error(err);
+showToast("Failed to send message","error");
+
+}
+
+}
+
+// MARK READ
+async function markAsRead(chatId){
+
+try{
+
+await fetch(`${API_BASE}/conversations/${chatId}/read`,{method:"PUT"});
+
+}catch(err){
+
+console.error(err);
+
+}
+
+}
+
+// CLOSE CHAT
+async function closeCurrentChat(){
+
+if(!currentChatId) return;
+
+if(!confirm("Close this chat?")) return;
+
+try{
+
+await fetch(`${API_BASE}/conversations/${currentChatId}/close`,{method:"PUT"});
+
+resetChatView();
+loadChats();
+
+}catch(err){
+
+showToast("Failed to close chat","error");
+
+}
+
+}
+
+// DELETE CHAT
+async function deleteCurrentChat(){
+
+if(!currentChatId) return;
+
+if(!confirm("Delete this chat?")) return;
+
+try{
+
+await fetch(`${API_BASE}/conversations/${currentChatId}`,{method:"DELETE"});
+
+resetChatView();
+loadChats();
+
+}catch(err){
+
+showToast("Failed to delete chat","error");
+
+}
+
+}
+
+// RESET VIEW
+function resetChatView(){
+
+currentChatId = null;
+
+chatTitle.textContent = "Select a chat";
+chatSubtitle.textContent = "Click on a conversation";
+
+chatInputArea.style.display = "none";
+
+chatMessages.innerHTML =
+`<div class="empty-chat">
+
+  <div class="empty-icon">💬</div>
+  <p>Select a conversation</p>
+  </div>`;}
+
+// FILTER CHATS
+function filterChats(query){
+
+const items=document.querySelectorAll(".chat-item");
+
+items.forEach(item=>{
+
+const name=item.querySelector(".chat-name").textContent.toLowerCase();
+
+item.style.display = name.includes(query.toLowerCase()) ? "flex":"none";
+
 });
+
+}
+
+// UNREAD COUNT
+function updateTotalUnread(){
+
+const total = chats.reduce((sum,c)=>sum+(c.unreadCount||0),0);
+
+totalUnreadBadge.textContent=total;
+totalUnreadBadge.style.display = total ? "inline-block":"none";
+
+}
+
+// AUTO RESIZE
+function autoResize(){
+
+this.style.height="auto";
+this.style.height=Math.min(this.scrollHeight,120)+"px";
+
+}
+
+// SCROLL
+function scrollToBottom(){
+
+chatMessages.scrollTop = chatMessages.scrollHeight;
+
+}
+
+// FORMAT TIME
+function formatTime(date){
+
+const d=new Date(date);
+
+return d.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"});
+
+}
+
+// FORMAT DATE
+function formatDate(date){
+
+const d=new Date(date);
+
+return d.toLocaleString();
+
+}
+
+// ESCAPE HTML
+function escapeHtml(text){
+
+const div=document.createElement("div");
+div.textContent=text;
+return div.innerHTML;
+
+}
+
+// TOAST
+function showToast(msg,type="info"){
+
+toast.textContent=msg;
+toast.className="toast ${type} show";
+
+setTimeout(()=>{
+toast.classList.remove("show");
+},3000);
+
+}
+
+// AUTO REFRESH
+function startAutoRefresh(){
+
+refreshInterval=setInterval(()=>{
+
+loadChats();
+
+if(currentChatId){
+  loadMessages(currentChatId);
+}
+
+},4000);
+
+}
