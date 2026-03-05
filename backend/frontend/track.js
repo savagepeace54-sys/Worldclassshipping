@@ -93,10 +93,12 @@ function initializeChat() {
 
 async function getOrCreateConversation() {
   try {
+    console.log('Getting/creating conversation for:', tn); // Debug log
     const res = await fetch(`/api/chat/conversations/${tn}`);
     if (!res.ok) throw new Error('Failed to get conversation');
     
     const conversation = await res.json();
+    console.log('Conversation:', conversation); // Debug log
     conversationId = conversation._id;
     
     // Load messages
@@ -113,10 +115,12 @@ async function loadMessages() {
   if (!conversationId) return;
   
   try {
+    console.log('Loading messages for conversation:', conversationId); // Debug log
     const res = await fetch(`/api/chat/conversations/${conversationId}/messages`);
     if (!res.ok) throw new Error('Failed to load messages');
     
     const messages = await res.json();
+    console.log('Loaded messages:', messages); // Debug log
     renderMessages(messages);
     
     // Update unread badge
@@ -149,7 +153,12 @@ function renderMessages(messages) {
 
 async function sendMessage() {
   const content = chatInput.value.trim();
-  if (!content || !conversationId) return;
+  if (!content || !conversationId) {
+    console.log('Cannot send: content or conversationId missing', { content, conversationId }); // Debug log
+    return;
+  }
+  
+  console.log('Sending message:', { conversationId, content }); // Debug log
   
   // Clear input
   chatInput.value = '';
@@ -164,7 +173,12 @@ async function sendMessage() {
       })
     });
     
+    console.log('Send response status:', res.status); // Debug log
+    
     if (!res.ok) throw new Error('Failed to send message');
+    
+    const result = await res.json();
+    console.log('Message sent:', result); // Debug log
     
     // Reload messages
     await loadMessages();

@@ -56,6 +56,7 @@ async function loadChats() {
     if (!res.ok) throw new Error('Failed to load chats');
     
     chats = await res.json();
+    console.log('Loaded conversations:', chats); // Debug log
     renderChatList();
     updateTotalUnread();
   } catch (err) {
@@ -66,7 +67,7 @@ async function loadChats() {
 
 // Render chat list
 function renderChatList() {
-  if (chats.length === 0) {
+  if (!chats || chats.length === 0) {
     chatList.innerHTML = `
       <div class="empty-state">
         <p>No active chats</p>
@@ -76,11 +77,12 @@ function renderChatList() {
   }
 
   chatList.innerHTML = chats.map(chat => {
-    const lastMessage = chat.lastMessage || {};
+    const lastMessage = chat.lastMessage || null;
     const unreadCount = chat.unreadCount || 0;
     const isActive = chat._id === currentChatId;
     const initials = chat.trackingNumber ? chat.trackingNumber.substring(0, 2) : '??';
-    const time = lastMessage.createdAt ? formatTime(lastMessage.createdAt) : '';
+    const time = lastMessage && lastMessage.createdAt ? formatTime(lastMessage.createdAt) : '';
+    const preview = lastMessage && lastMessage.content ? lastMessage.content : 'No messages yet';
     
     return `
       <div class="chat-item ${isActive ? 'active' : ''} ${unreadCount > 0 ? 'unread' : ''}" 
@@ -89,7 +91,7 @@ function renderChatList() {
         <div class="chat-avatar">${initials}</div>
         <div class="chat-info">
           <div class="chat-name">${chat.trackingNumber || 'Unknown'}</div>
-          <div class="chat-preview">${lastMessage.content || 'No messages yet'}</div>
+          <div class="chat-preview">${preview}</div>
         </div>
         <div class="chat-meta">
           <div class="chat-time">${time}</div>
@@ -100,8 +102,8 @@ function renderChatList() {
   }).join('');
 }
 
-// Select a chat
-async function selectChat(chatId) {
+// Select a chat - make it global for onclick handlers
+window.selectChat = async function(chatId) {
   currentChatId = chatId;
   const chat = chats.find(c => c._id === chatId);
   
