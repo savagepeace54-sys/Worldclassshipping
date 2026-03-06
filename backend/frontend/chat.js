@@ -23,392 +23,320 @@ const toast = document.getElementById('toast');
 
 // INIT
 document.addEventListener('DOMContentLoaded', () => {
-loadChats();
-setupEventListeners();
-startAutoRefresh();
+  loadChats();
+  setupEventListeners();
+  startAutoRefresh();
 });
 
 // EVENT LISTENERS
 function setupEventListeners() {
 
-if (sendBtn) sendBtn.addEventListener('click', sendMessage);
+  if (sendBtn) sendBtn.addEventListener('click', sendMessage);
 
-if (messageInput) {
-messageInput.addEventListener('keydown', (e) => {
-if (e.key === 'Enter' && !e.shiftKey) {
-e.preventDefault();
-sendMessage();
-}
-});
+  if (messageInput) {
+    messageInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
 
-messageInput.addEventListener('input', autoResize);
+    messageInput.addEventListener('input', autoResize);
+  }
 
-}
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      filterChats(e.target.value);
+    });
+  }
 
-if (searchInput) {
-searchInput.addEventListener('input', (e) => {
-filterChats(e.target.value);
-});
-}
-
-if (closeChatBtn) closeChatBtn.addEventListener('click', closeCurrentChat);
-if (deleteChatBtn) deleteChatBtn.addEventListener('click', deleteCurrentChat);
+  if (closeChatBtn) closeChatBtn.addEventListener('click', closeCurrentChat);
+  if (deleteChatBtn) deleteChatBtn.addEventListener('click', deleteCurrentChat);
 }
 
 // LOAD CHATS
 async function loadChats() {
-try {
+  try {
 
-const res = await fetch(`${API_BASE}/conversations`);
-chats = await res.json();
+    const res = await fetch(`${API_BASE}/conversations`);
+    chats = await res.json();
 
-renderChatList();
-updateTotalUnread();
+    renderChatList();
+    updateTotalUnread();
 
-} catch (err) {
+  } catch (err) {
 
-console.error(err);
-showToast('Failed to load chats', 'error');
+    console.error(err);
+    showToast('Failed to load chats', 'error');
 
-}
+  }
 }
 
 // RENDER CHAT LIST
 function renderChatList() {
 
-if (!chats.length) {
-chatList.innerHTML = "<div class="empty-state"><p>No active chats</p></div>";
-return;
-}
+  if (!chats.length) {
+    chatList.innerHTML = `<div class="empty-state"><p>No active chats</p></div>`;
+    return;
+  }
 
-chatList.innerHTML = chats.map(chat => {
+  chatList.innerHTML = chats.map(chat => {
 
-const lastMessage = chat.lastMessage || {};
-const unreadCount = chat.unreadCount || 0;
+    let lastMessage = chat.lastMessage || {};
 
-const preview = lastMessage.content || "No messages yet";
-const time = lastMessage.createdAt ? formatTime(lastMessage.createdAt) : "";
+    if (typeof lastMessage === "string") {
+      try {
+        lastMessage = JSON.parse(lastMessage);
+      } catch {
+        lastMessage = {};
+      }
+    }
 
-return `
+    const unreadCount = chat.unreadCount || 0;
+    const preview = lastMessage.content || "No messages yet";
+    const time = lastMessage.createdAt ? formatTime(lastMessage.createdAt) : "";
 
-<div class="chat-item ${chat._id === currentChatId ? 'active' : ''}"
-onclick="selectChat('${chat._id}')">
+    return `
+    <div class="chat-item ${chat._id === currentChatId ? 'active' : ''}"
+      onclick="selectChat('${chat._id}')">
 
-  <div class="chat-avatar">
-  ${chat.trackingNumber ? chat.trackingNumber.slice(0,2) : "??"}
-  </div>
+      <div class="chat-avatar">
+        ${chat.trackingNumber ? chat.trackingNumber.slice(0,2) : "??"}
+      </div>
 
-  <div class="chat-info">
+      <div class="chat-info">
+        <div class="chat-name">${chat.trackingNumber || "Unknown"}</div>
+        <div class="chat-preview">${preview}</div>
+      </div>
 
-    <div class="chat-name">${chat.trackingNumber}</div>
-    <div class="chat-preview">${preview}</div>
+      <div class="chat-meta">
+        <div class="chat-time">${time}</div>
+        ${unreadCount ? `<span class="chat-unread">${unreadCount}</span>` : ''}
+      </div>
 
-  </div>
+    </div>
+    `;
 
-  <div class="chat-meta">
-
-    <div class="chat-time">${time}</div>
-
-    ${unreadCount ? `<span class="chat-unread">${unreadCount}</span>` : ''}
-
-  </div>
-
-</div>
-
-`;
-
-}).join("");
-
+  }).join("");
 }
 
 // SELECT CHAT
 window.selectChat = async function(chatId){
 
-currentChatId = chatId;
+  currentChatId = chatId;
 
-const chat = chats.find(c => c._id === chatId);
+  const chat = chats.find(c => c._id === chatId);
+  if(!chat) return;
 
-if(!chat) return;
+  currentTrackingNumber = chat.trackingNumber;
 
-currentTrackingNumber = chat.trackingNumber;
+  chatTitle.textContent = `Tracking: ${chat.trackingNumber}`;
+  chatSubtitle.textContent = `Started: ${formatDate(chat.createdAt)}`;
 
-chatTitle.textContent = "Tracking: ${chat.trackingNumber}";
-chatSubtitle.textContent = "Started: ${formatDate(chat.createdAt)}";
+  chatInputArea.style.display = "block";
 
-chatInputArea.style.display = "block";
-
-await loadMessages(chatId);
-await markAsRead(chatId);
+  await loadMessages(chatId);
+  await markAsRead(chatId);
 
 }
 
 // LOAD MESSAGES
 async function loadMessages(chatId){
 
-try{
+  try{
 
-const res = await fetch(`${API_BASE}/conversations/${chatId}/messages`);
+    const res = await fetch(`${API_BASE}/conversations/${chatId}/messages`);
+    const messages = await res.json();
 
-const messages = await res.json();
+    renderMessages(messages);
 
-renderMessages(messages);
+  }catch(err){
 
-}catch(err){
+    console.error(err);
+    showToast("Failed to load messages","error");
 
-console.error(err);
-showToast("Failed to load messages","error");
-
-}
+  }
 
 }
 
 // RENDER MESSAGES
 function renderMessages(messages){
 
-if(!messages.length){
+  if(!messages.length){
 
-chatMessages.innerHTML =
-`<div class="empty-chat">
-<div class="empty-icon">💬</div>
-<p>No messages yet</p>
-</div>`;
+    chatMessages.innerHTML = `
+    <div class="empty-chat">
+      <div class="empty-icon">💬</div>
+      <p>No messages yet</p>
+    </div>`;
 
-return;
+    return;
 
-}
+  }
 
-chatMessages.innerHTML = messages.map(msg=>{
+  chatMessages.innerHTML = messages.map(msg=>{
 
-const isAdmin = msg.sender === "admin";
+    const isAdmin = msg.sender === "admin";
 
-return`
+    return `
+    <div class="message ${isAdmin ? "sent":"received"}">
 
-<div class="message ${isAdmin ? "sent":"received"}">
+      <div class="message-header">
+        ${isAdmin ? "You (Admin)":"Customer"}
+      </div>
 
-<div class="message-header">
-${isAdmin ? "You (Admin)":"Customer"}
-</div>
+      <div class="message-content">
+        ${escapeHtml(msg.content)}
+      </div>
 
-<div class="message-content">
-${escapeHtml(msg.content)}
-</div>
+      <div class="message-time">
+        ${formatTime(msg.createdAt)}
+      </div>
 
-<div class="message-time">
-${formatTime(msg.createdAt)}
-</div>
+    </div>
+    `
 
-</div>
+  }).join("");
 
-`
-
-}).join("");
-
-scrollToBottom();
+  scrollToBottom();
 
 }
 
 // SEND MESSAGE
 async function sendMessage(){
 
-const content = messageInput.value.trim();
+  const content = messageInput.value.trim();
+  if(!content || !currentChatId) return;
 
-if(!content || !currentChatId) return;
+  try{
 
-try{
+    await fetch(`${API_BASE}/conversations/${currentChatId}/messages`,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({
+        content,
+        sender:"admin"
+      })
+    });
 
-await fetch(`${API_BASE}/conversations/${currentChatId}/messages`,{
+    messageInput.value="";
+    messageInput.style.height="auto";
 
-  method:"POST",
-  headers:{ "Content-Type":"application/json" },
+    await loadMessages(currentChatId);
+    await loadChats();
 
-  body:JSON.stringify({
-    content,
-    sender:"admin"
-  })
+  }catch(err){
 
-});
+    console.error(err);
+    showToast("Failed to send message","error");
 
-messageInput.value="";
-messageInput.style.height="auto";
-
-await loadMessages(currentChatId);
-await loadChats();
-
-}catch(err){
-
-console.error(err);
-showToast("Failed to send message","error");
-
-}
+  }
 
 }
 
 // MARK READ
 async function markAsRead(chatId){
 
-try{
-
-await fetch(`${API_BASE}/conversations/${chatId}/read`,{method:"PUT"});
-
-}catch(err){
-
-console.error(err);
-
-}
-
-}
-
-// CLOSE CHAT
-async function closeCurrentChat(){
-
-if(!currentChatId) return;
-
-if(!confirm("Close this chat?")) return;
-
-try{
-
-await fetch(`${API_BASE}/conversations/${currentChatId}/close`,{method:"PUT"});
-
-resetChatView();
-loadChats();
-
-}catch(err){
-
-showToast("Failed to close chat","error");
-
-}
-
-}
-
-// DELETE CHAT
-async function deleteCurrentChat(){
-
-if(!currentChatId) return;
-
-if(!confirm("Delete this chat?")) return;
-
-try{
-
-await fetch(`${API_BASE}/conversations/${currentChatId}`,{method:"DELETE"});
-
-resetChatView();
-loadChats();
-
-}catch(err){
-
-showToast("Failed to delete chat","error");
-
-}
+  try{
+    await fetch(`${API_BASE}/conversations/${chatId}/read`,{method:"PUT"});
+  }catch(err){
+    console.error(err);
+  }
 
 }
 
 // RESET VIEW
 function resetChatView(){
 
-currentChatId = null;
+  currentChatId = null;
 
-chatTitle.textContent = "Select a chat";
-chatSubtitle.textContent = "Click on a conversation";
+  chatTitle.textContent = "Select a chat";
+  chatSubtitle.textContent = "Click on a conversation";
 
-chatInputArea.style.display = "none";
+  chatInputArea.style.display = "none";
 
-chatMessages.innerHTML =
-`<div class="empty-chat">
-
-  <div class="empty-icon">💬</div>
-  <p>Select a conversation</p>
-  </div>`;}
+  chatMessages.innerHTML = `
+  <div class="empty-chat">
+    <div class="empty-icon">💬</div>
+    <p>Select a conversation</p>
+  </div>`;
+}
 
 // FILTER CHATS
 function filterChats(query){
 
-const items=document.querySelectorAll(".chat-item");
+  const items=document.querySelectorAll(".chat-item");
 
-items.forEach(item=>{
+  items.forEach(item=>{
 
-const name=item.querySelector(".chat-name").textContent.toLowerCase();
+    const name=item.querySelector(".chat-name").textContent.toLowerCase();
+    item.style.display = name.includes(query.toLowerCase()) ? "flex":"none";
 
-item.style.display = name.includes(query.toLowerCase()) ? "flex":"none";
-
-});
+  });
 
 }
 
 // UNREAD COUNT
 function updateTotalUnread(){
 
-const total = chats.reduce((sum,c)=>sum+(c.unreadCount||0),0);
+  const total = chats.reduce((sum,c)=>sum+(c.unreadCount||0),0);
 
-totalUnreadBadge.textContent=total;
-totalUnreadBadge.style.display = total ? "inline-block":"none";
+  totalUnreadBadge.textContent=total;
+  totalUnreadBadge.style.display = total ? "inline-block":"none";
 
 }
 
 // AUTO RESIZE
 function autoResize(){
-
-this.style.height="auto";
-this.style.height=Math.min(this.scrollHeight,120)+"px";
-
+  this.style.height="auto";
+  this.style.height=Math.min(this.scrollHeight,120)+"px";
 }
 
 // SCROLL
 function scrollToBottom(){
-
-chatMessages.scrollTop = chatMessages.scrollHeight;
-
+  chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
 // FORMAT TIME
 function formatTime(date){
-
-const d=new Date(date);
-
-return d.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"});
-
+  const d=new Date(date);
+  return d.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"});
 }
 
 // FORMAT DATE
 function formatDate(date){
-
-const d=new Date(date);
-
-return d.toLocaleString();
-
+  const d=new Date(date);
+  return d.toLocaleString();
 }
 
 // ESCAPE HTML
 function escapeHtml(text){
-
-const div=document.createElement("div");
-div.textContent=text;
-return div.innerHTML;
-
+  const div=document.createElement("div");
+  div.textContent=text;
+  return div.innerHTML;
 }
 
 // TOAST
 function showToast(msg,type="info"){
+  toast.textContent=msg;
+  toast.className=`toast ${type} show`;
 
-toast.textContent=msg;
-toast.className="toast ${type} show";
-
-setTimeout(()=>{
-toast.classList.remove("show");
-},3000);
-
+  setTimeout(()=>{
+    toast.classList.remove("show");
+  },3000);
 }
 
 // AUTO REFRESH
 function startAutoRefresh(){
 
-refreshInterval=setInterval(()=>{
+  refreshInterval=setInterval(()=>{
 
-loadChats();
+    loadChats();
 
-if(currentChatId){
-  loadMessages(currentChatId);
-}
+    if(currentChatId){
+      loadMessages(currentChatId);
+    }
 
-},4000);
+  },4000);
 
 }
