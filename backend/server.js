@@ -56,6 +56,7 @@ const shipmentSchema = new mongoose.Schema({
 
 const Shipment = mongoose.model("Shipment",shipmentSchema);
 
+
 // ============================
 // CREATE / SAVE SHIPMENT
 // ============================
@@ -72,6 +73,22 @@ app.post('/api/shipments', async (req, res) => {
    message: "Shipment saved successfully",
    shipment
   });
+
+ } catch (err) {
+
+  console.error("Error saving shipment:", err);
+
+  res.status(500).json({ error: err.message });
+
+ }
+
+});
+
+
+// ============================
+// UPDATE SHIPMENT
+// ============================
+
 app.put('/api/shipments/:trackingNumber', async (req,res)=>{
  try{
 
@@ -89,6 +106,12 @@ app.put('/api/shipments/:trackingNumber', async (req,res)=>{
 
  }
 });
+
+
+// ============================
+// DELETE SHIPMENT
+// ============================
+
 app.delete('/api/shipments/:trackingNumber', async (req,res)=>{
  try{
 
@@ -104,15 +127,8 @@ app.delete('/api/shipments/:trackingNumber', async (req,res)=>{
 
  }
 });
- } catch (err) {
 
-  console.error("Error saving shipment:", err);
 
-  res.status(500).json({ error: err.message });
-
- }
-
-});
 // ============================
 // Chat Schemas
 // ============================
