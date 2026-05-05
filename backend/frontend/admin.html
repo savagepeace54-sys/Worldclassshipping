@@ -2,63 +2,87 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>worldclassshipping | Admin</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="admin.css">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <title>Webpage Not Available</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background-color: #f2f2f2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: #5f6368;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 320px;
+    }
+
+    .icon {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 20px;
+      border: 2px solid #dadce0;
+      border-radius: 8px;
+      position: relative;
+    }
+
+    .icon::before {
+      content: "⚡";
+      font-size: 40px;
+      position: absolute;
+      top: 35%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #9aa0a6;
+    }
+
+    .cloud {
+      position: absolute;
+      width: 40px;
+      height: 25px;
+      background: #dadce0;
+      border-radius: 50px;
+    }
+
+    .cloud.left {
+      left: -20px;
+      bottom: 10px;
+    }
+
+    .cloud.right {
+      right: -20px;
+      bottom: 10px;
+    }
+
+    h1 {
+      font-size: 20px;
+      margin-bottom: 10px;
+      color: #3c4043;
+    }
+
+    p {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+  </style>
 </head>
 <body>
 
-<header class="navbar">
-  <div class="logo">worldclassshipping Admin</div>
-  <nav>
-    <a href="admin.html" class="active">Shipments</a>
-    <a href="chat.html">Support Chat</a>
-  </nav>
-</header>
+  <div class="container">
+    <div class="icon">
+      <div class="cloud left"></div>
+      <div class="cloud right"></div>
+    </div>
 
-<section class="admin-section">
-  <h2>Create / Edit Shipment</h2>
-
-  <div class="form-box">
-    <input id="tracking" readonly placeholder="Tracking Number">
-
-    <input id="sender" placeholder="Sender Name">
-    <input id="recipient" placeholder="Receiver Name">
-    <input id="origin" placeholder="Origin">
-    <input id="destination" placeholder="Destination">
-    <input id="weight" placeholder="Weight (kg)">
-
-    <!-- STATUS (FREE TEXT) -->
-    <input id="status" placeholder="Current Status (you type it)">
-
-    <!-- LAST UPDATE -->
-    <input id="lastUpdate" placeholder="Last Update (e.g. 21 Oct 2026, 3:45 PM)">
-
-    <h3>Set Route</h3>
-    <div id="adminMap" style="height:300px; flex-basis:100%; margin-bottom:10px;"></div>
-    <p style="color:gray; font-size:0.9em;">
-      Click on the map to add points (Origin → Transit → Destination). Drag markers to adjust.
+    <h1>Webpage not available</h1>
+    <p>
+      The page may have been deleted, the URL is incorrect,<br>
+      or some other error occurred.
     </p>
-
-    <button onclick="saveShipment()">Save Shipment</button>
   </div>
 
-  <h2>All Shipments</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Tracking</th>
-        <th>Receiver</th>
-        <th>Status</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody id="shipmentTable"></tbody>
-  </table>
-</section>
-
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-<script src="adminscript.js"></script>
 </body>
 </html>
