@@ -1,43 +1,88 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>worldclassshipping | Track Shipment</title>
-  <link rel="stylesheet" href="indexstyle.css" />
+  <meta charset="UTF-8">
+  <title>Webpage Not Available</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background-color: #f2f2f2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: #5f6368;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 320px;
+    }
+
+    .icon {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 20px;
+      border: 2px solid #dadce0;
+      border-radius: 8px;
+      position: relative;
+    }
+
+    .icon::before {
+      content: "⚡";
+      font-size: 40px;
+      position: absolute;
+      top: 35%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #9aa0a6;
+    }
+
+    .cloud {
+      position: absolute;
+      width: 40px;
+      height: 25px;
+      background: #dadce0;
+      border-radius: 50px;
+    }
+
+    .cloud.left {
+      left: -20px;
+      bottom: 10px;
+    }
+
+    .cloud.right {
+      right: -20px;
+      bottom: 10px;
+    }
+
+    h1 {
+      font-size: 20px;
+      margin-bottom: 10px;
+      color: #3c4043;
+    }
+
+    p {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+  </style>
 </head>
 <body>
 
-<header class="navbar">
-  <div class="logo">worldclassshipping</div>
-  <nav>
-    <a href="#">About Us</a>
-    <a href="#">Services</a>
-    <a class="active" href="#">Track</a>
-    <a href="#">Careers</a>
-    <a href="#">Contact Us</a>
-  </nav>
-</header>
-
-<section class="hero">
-  <div class="overlay">
-    <h1>TRACK YOUR SHIPMENT</h1>
-    <p>Get the status of your shipment quickly. Real-time updates for your package.</p>
-
-    <div class="tracker-box">
-      <label>TRACKING NUMBER</label>
-      <input type="text" id="trackingNumber" placeholder="Enter tracking number" />
-      <button onclick="trackShipment()">TRACK</button>
-
-      <div id="trackingResult" style="margin-top:20px; padding:10px; background:#f0f0f0; border-radius:5px;"></div>
+  <div class="container">
+    <div class="icon">
+      <div class="cloud left"></div>
+      <div class="cloud right"></div>
     </div>
+
+    <h1>Webpage not available</h1>
+    <p>
+      The page may have been deleted, the URL is incorrect,<br>
+      or some other error occurred.
+    </p>
   </div>
-</section>
 
-<footer>
-  <p>© worldclassshipping Limited. All Rights Reserved</p>
-</footer>
-
-<script src="indexscript.js"></script>
 </body>
 </html>
